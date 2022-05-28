@@ -1,65 +1,51 @@
 import React, { useEffect } from 'react';
 import Scene, { SceneItem } from 'scenejs';
 import * as THREE from 'three';
-import { Matrix4 } from 'three';
 // import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 // import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 // import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 // import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 // import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
 import './App.css';
-import { makeEarthCloudTexture } from './makeEarthCloudTexture';
 
 const vertexShader = `
+varying vec2 vPos;
+varying vec3 vVertexWorldPosition;
 varying vec3 vNormal;
 
 
 void main() {
   vNormal = normalize(normalMatrix * normal);
+  vVertexWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  vPos = gl_Position.xy / gl_Position.w;
 }
 `;
 const fragmentShader = `
+#define M_PI 3.1415926535897932384626433832795
+varying vec2 vPos;
+// uniform float aspect;
+// uniform float minX;
+// uniform float maxX;
+// uniform float minY;
+// uniform float maxY;
+
+
 varying vec3 vNormal;
-uniform vec3 uColor;
+varying vec3 vVertexWorldPosition;
 
 void main() {
-  float intensity = pow(0.65 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 15.0); 
-	gl_FragColor = vec4(uColor, 1.0 ) * intensity;
+  float intensity = pow(0.65 - dot(vNormal, vec3( 0.0, 0.0, 1.0 ) ),  2.9); 
+	gl_FragColor = vec4( 0.3, 0.8, 1.0, 1.0 ) * intensity;
 }
 `;
-const haloFragmentShader = `
-varying vec3 vNormal;
-uniform vec3 uColor;
 
-void main() {
-	gl_FragColor = vec4(uColor, 1.0 ) * (1.0 - dot(vNormal.xy, vNormal.xy));
-}
-`;
-const sunriseVertexShader = `
-varying vec2 vUv;
-
-void main() {
-  vUv = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}
-`;
-const sunriseFragmentShader = `
-varying vec2 vUv;
-uniform vec3 uColor;
-
-void main() {
-
-  float x = 1.0 - 2.0 * abs(vUv.x - 0.5);
-  float scale = x * 2.0;
-	gl_FragColor = vec4( uColor, 1.0 ) * scale;
-}
-`;
 function App() {
   useEffect(() => {
     // global variables
     let scene: THREE.Scene;
-    let camera: THREE.OrthographicCamera;
+    let camera: THREE.PerspectiveCamera;
     let renderer: THREE.WebGLRenderer;
     const canvas = document.querySelector<HTMLCanvasElement>('.webgl')!;
 
@@ -72,12 +58,11 @@ function App() {
     const near = 0.1;
     const far = 1000;
 
-    const perspectiveCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0.1, 10000);
+    camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+    // camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0, 10);
 
 
-    perspectiveCamera.position.z = 2;
-    camera.position.z = 10;
+    camera.position.z = 2;
     scene.add(camera);
 
     // renderer setup
@@ -94,23 +79,19 @@ function App() {
     renderer.setClearColor(0x000000, 1.0);
 
 
-    // https://www.solarsystemscope.com/textures/
     // earth geometry
     const earthGeometry = new THREE.SphereGeometry(0.6, 64, 64);
     const earthMaterial = new THREE.MeshPhongMaterial({
       // roughness: 1,
       // metalness: 0,
-      // shininess: 0.1,
-      map: new THREE.TextureLoader().load('texture/world.topo.bathy.200404.3x5400x2700.jpg'),
-      specularMap: new THREE.TextureLoader().load('texture/2k_earth_specular_map.png'),
-      specular: new THREE.Color('black'),
-      // bumpMap: new THREE.TextureLoader().load('texture/8081_earthbump2k.jpg'),
-      normalMap: new THREE.TextureLoader().load("texture/2k_earth_normal_map.png"),
-      normalScale: new THREE.Vector2(-2, -2),
+      // shininess: 10,
+      map: new THREE.TextureLoader().load('texture/2k_earth_daymap.jpeg'),
+      specularMap: new THREE.TextureLoader().load('texture/2k_earth_specular_map.tif'),
+      // bumpMap: new THREE.TextureLoader().load('texture/earthbump.jpg'),
+      // bumpScale: 0.3
     });
-    new THREE.TextureLoader()
     const earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
-
+    
     scene.add(earthMesh);
 
     const cloudGeometry = new THREE.SphereGeometry(0.601, 64, 64);
@@ -119,29 +100,19 @@ function App() {
       opacity: 0.5,
       transparent: true,
       depthWrite: false,
-      // map: new THREE.TextureLoader().load("texture/earthCloud.png"),
-      // map: makeEarthCloudTexture(),
-      map: new THREE.TextureLoader().load("texture/2k_earth_clouds.jpeg"),
+      map: new THREE.TextureLoader().load('texture/2k_earth_clouds.jpeg'),
     });
     const cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial);
     scene.add(cloudMesh);
 
-
-    earthMesh.rotateX(-0.4);
-    cloudMesh.rotateX(-0.4);
-    earthMesh.rotateY(2.4);
-    cloudMesh.rotateY(2.4);
     // galaxy geometry
-    const galaxyGeometry = new THREE.BoxGeometry(2, 1, 1);
-    const galaxyMaterial = new THREE.MeshBasicMaterial({
-      // map: new THREE.TextureLoader().load('texture/2k_stars_milky_way.jpeg'),
-      map: new THREE.TextureLoader().load('texture/2k_stars.jpeg'),
+    const starGeometry = new THREE.SphereGeometry(80, 64, 64);
+    const starMaterial = new THREE.MeshBasicMaterial({
+      map: new THREE.TextureLoader().load('texture/galaxy.png'),
       side: THREE.BackSide
     });
-    const galaxyMesh = new THREE.Mesh(galaxyGeometry, galaxyMaterial);
-    galaxyMesh.position.set(0, 0, -100);
-    galaxyMesh.scale.set(aspect * 2,  aspect * 2, aspect * 2);
-    scene.add(galaxyMesh);
+    const starMesh = new THREE.Mesh(starGeometry, starMaterial);
+    scene.add(starMesh);
 
 
     // https://aberlechiropractic.com/3d/spacewarp.html
@@ -156,7 +127,7 @@ function App() {
 
     for (let lineIndex = 0; lineIndex < lineCount; ++lineIndex) {
       const rad = Math.random() * Math.PI * 2;
-      const lineRadius = 20 + (Math.random() * 20);
+      const lineRadius = 4 + (Math.random() * 10);
       const lineX = lineRadius * Math.cos(rad);
       const lineY = lineRadius * Math.sin(rad);
       const lineZ = Math.random() * 500 - 100;
@@ -172,7 +143,6 @@ function App() {
     scene.add(lineObject);
 
     // atmosphere
-    const lightColor = new THREE.Color("#31ADFF");
     const atmosphereGeometry = new THREE.SphereGeometry(0.6, 64, 64);
     const atmosphereMaterial = new THREE.ShaderMaterial({
       vertexShader,
@@ -182,7 +152,13 @@ function App() {
       transparent: true,
       depthWrite: true,
       uniforms: {
-        uColor: { value: lightColor },
+        aspect: { value: window.innerWidth / window.innerHeight },
+        minX: { value: -1 },
+        maxX: { value: 1 },
+        minY: { value: -1 },
+        maxY: { value: 1 },
+        minZ: { value: -1 },
+        maxZ: { value: 1 },
       }
     });
     const atmosphereMesh = new THREE.Mesh(
@@ -191,48 +167,12 @@ function App() {
     );
 
     scene.add(atmosphereMesh);
-    const haloGeometry = new THREE.SphereGeometry(0.5, 64, 64);
-    const haloMaterial = new THREE.ShaderMaterial({
-      vertexShader,
-      fragmentShader: haloFragmentShader,
-      blending: THREE.AdditiveBlending,
-      side: THREE.BackSide,
-      transparent: true,
-      depthWrite: true,
-      uniforms: {
-        uColor: { value: lightColor },
-      }
-    });
-    const haloMesh = new THREE.Mesh(
-      haloGeometry,
-      haloMaterial,
-    );
-    haloMesh.position.set(0, -0.43, -0.1);
-    haloMesh.scale.set(1.5, 1, 1);
 
-    scene.add(haloMesh);
-
-    const sunriseGeometry = new THREE.BoxGeometry(2.5, 0.01, 0.01, 10, 10);
-    const sunriseMaterial = new THREE.ShaderMaterial({
-      vertexShader: sunriseVertexShader,
-      fragmentShader: sunriseFragmentShader,
-      blending: THREE.AdditiveBlending,
-      side: THREE.BackSide,
-      transparent: true,
-      depthWrite: true,
-      uniforms: {
-        uColor: { value: lightColor },
-      }
-    });
-    const sunriseMesh = new THREE.Mesh(
-      sunriseGeometry,
-      sunriseMaterial,
-    );
-    sunriseMesh.position.set(0, -0.242, 0);
-    scene.add(sunriseMesh);
+    const directionalLight = new THREE.DirectionalLight( 0xffffff, 100);
+    scene.add( directionalLight );
 
     // ambient light
-    const ambientlight = new THREE.AmbientLight(lightColor, 0.5);
+    const ambientlight = new THREE.AmbientLight(0xffffff, 0.2);
     ambientlight.position.set(0, -0.5, -0.5);
     scene.add(ambientlight);
 
@@ -240,85 +180,54 @@ function App() {
     // scene.add(ambientlightProbe);
 
     // point light
-    const pointLight = new THREE.PointLight(lightColor, 3, 5);
-    const pointLight2 = new THREE.PointLight(0xffffff, 3, 5);
+    const pointLight = new THREE.PointLight(0xaaaac2, 4, 10);
 
     scene.add(pointLight);
-    scene.add(pointLight2);
 
     // point light helper
-    // const Helper = new THREE.PointLightHelper(pointLight);
-    // scene.add(Helper);
+    const Helper = new THREE.PointLightHelper(pointLight);
+    scene.add(Helper);
 
-    lineObject.matrixAutoUpdate = false;
 
-    lineObject.matrix.makePerspective(-1, 1, 1, -1, 0.5, -100);
-
-    // let z = 1.7;
+    let y = -0.7;
+    let z = 1.7;
     const endPoint = 1.3;
     // y = log 2 z
 
     const earthItem = new SceneItem({
       0: { t: 0 },
-      8.5: { deg: -170, atmosphereScale: 0.9, haloScale: 0,  },
-      9.1: { sunriseScale: 0, sunrisePosition: -0.01 },
-      9.7: { atmosphereScale: 1.07, deg: -260, sunriseScale: 1, sunrisePosition: 0, haloScale: 1 },
-      10: { t: 320 },
+      9.5: { deg: -200 },
+      10.5: { scale: 0.8 },
+      10.7: { scale: 1.05, deg: -220 },
+      11: { t: 320 },
     }, {
       easing: "ease-out",
     }).on("animate", e => {
       const tick = e.frame.get("t");
-
+      const scale = e.frame.get("scale");
       const rad = e.frame.get("deg") * Math.PI / 180;
 
-      let z = -30 + tick * 0.1;
+      atmosphereMesh.scale.set(scale, scale, scale);
+      z = -30 + tick * 0.1;
 
       if (z > endPoint) {
         z = endPoint;
       }
-      const reverse = (from: number[], to: number[], c: number, point: number) => {
-        // y =  a / (x - b) + c
-        // from[1] = a / (from[0] - b) + c
-        // (from[1] - c)  * (from[0] - b) = a
-        // (from[1] - c) * (from[0] - b) = (to[1] - c) * (to[0] - b)
-        // (from[1] - c) / (to[1] - c) * (from[0] - b) = to[0] - b
-        // (1 - (from[1] - c) / (to[1] - c)) * b = to[0] - (from[1] - c) / (to[1] - c) * from[0];
+      y = Math.log10(endPoint + 1 - z) - 0.65;
 
-        const b = (to[0] - (from[1] - c) / (to[1] - c) * from[0]) / (1 - (from[1] - c) / (to[1] - c));
-        const a = (from[1] - c)  * (from[0] - b);
-        
-        return a / (point - b) + c;
-      };
+      cloudMesh.position.y = y;
+      cloudMesh.position.z = z;
+      earthMesh.position.y = y;
+      earthMesh.position.z = z;
 
-      // y = Math.log10(endPoint + 1 - z) * 3 - 2.65;
-      const y = reverse([-30, 0], [endPoint, -2.65], 0.05, z);
-      const globeScale = reverse([-30, 0.1], [endPoint, 4], -0.1, z); // linear([-30, 0.01], [endPoint, 4], z)
+      atmosphereMesh.position.y = y;
+      atmosphereMesh.position.z = z - 0.01;
 
-      cloudMesh.position.set(0, y, z);
-      earthMesh.position.set(0, y, z);
-      atmosphereMesh.position.set(0, y, z - 0.1);
+      const lightZ = 2 * Math.cos(rad);
+      const lightY = 2 * Math.sin(rad);
 
-      const atmosphereScale = globeScale * e.frame.get("atmosphereScale");
-
-      cloudMesh.scale.set(globeScale, globeScale, globeScale);
-      earthMesh.scale.set(globeScale, globeScale, globeScale);
-      atmosphereMesh.scale.set(atmosphereScale, atmosphereScale, atmosphereScale);
-
-
-      // light
-      const lightZ = 3 * Math.cos(rad);
-      const lightY = 3 * Math.sin(rad);
-
+      directionalLight.position.set(0, y, z - 2);
       pointLight.position.set(0, y + lightY, z + lightZ);
-      pointLight2.position.set(0, y + lightY, z + lightZ);
-
-      const sunriseScale = e.frame.get("sunriseScale");
-      const sunrisePosition = e.frame.get("sunrisePosition");
-      const haloScale = e.frame.get("haloScale");
-
-      sunriseMesh.position.set(0, -0.242 + sunrisePosition, 0);
-      sunriseMesh.scale.set(sunriseScale, sunriseScale, 1);
-      haloMesh.scale.set(haloScale * 1.5, haloScale, haloScale);
     });
 
     const soonText = "Coming Soon";
@@ -359,8 +268,12 @@ function App() {
       earthScene.setTime(earthScene.getTime() + e.deltaY / 1000);
     });
 
+
     earthScene.setTime(earthScene.getDuration());
     const render = () => {
+      const matrix = new THREE.Matrix4();
+      const matrix2 = new THREE.Matrix4();
+
 
       for (let lineIndex = 0; lineIndex < lineCount; ++lineIndex) {
         velocities[2 * lineIndex] += 0.007;
@@ -381,9 +294,74 @@ function App() {
       }
       linePosition.needsUpdate = true;
 
+      earthMesh.rotateOnAxis(new THREE.Vector3(1, 2, -1), 0.0001);
+      cloudMesh.rotateOnAxis(new THREE.Vector3(1, 2, -1), 0.0001);
 
-      earthMesh.rotateOnAxis(new THREE.Vector3(1, 2, -1), 0.0003);
-      cloudMesh.rotateOnAxis(new THREE.Vector3(1, 2, -1), 0.0003);
+      camera.updateProjectionMatrix();
+      atmosphereGeometry.computeVertexNormals();
+      matrix2.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+      matrix.multiplyMatrices(matrix2, atmosphereMesh.matrix);
+
+      const elements = matrix.elements;
+      const rangeX = [Infinity, -Infinity];
+      const rangeY = [Infinity, -Infinity];
+      const rangeZ = [Infinity, -Infinity];
+      const count = 30;
+      const r = 0.6;
+
+      for (let i = 0; i < count; ++i) {
+        const rad1 = 2 * Math.PI / count * i;
+        // const x = r * Math.cos(rad1);
+        const y = r * Math.sin(rad1);
+        const zr = Math.sqrt(r * r - y * y);
+
+        for (let j = 0; j < count; ++j) {
+          const rad2 = 2 * Math.PI / count * j;
+
+          const x = zr * Math.cos(rad2);
+          const z = zr * Math.sin(rad2);
+
+          const vec4 = [
+            x,
+            y,
+            z,
+            1,
+          ];
+
+
+          const dest = [
+            elements[0] * vec4[0] + elements[4] * vec4[1] + elements[8] * vec4[2] + elements[12] * vec4[3],
+            elements[1] * vec4[0] + elements[5] * vec4[1] + elements[9] * vec4[2] + elements[13] * vec4[3],
+            elements[2] * vec4[0] + elements[6] * vec4[1] + elements[10] * vec4[2] + elements[14] * vec4[3],
+            elements[3] * vec4[0] + elements[7] * vec4[1] + elements[11] * vec4[2] + elements[15] * vec4[3],
+          ];
+
+          if (Math.abs(dest[3]) < 0.1) {
+            continue;
+          }
+          dest[0] = dest[0] / dest[3];
+          dest[1] = dest[1] / dest[3];
+          dest[2] = dest[2] / dest[3];
+
+          if (isNaN(dest[0])) {
+            continue;
+          }
+          rangeX[0] = Math.min(dest[0], rangeX[0]);
+          rangeX[1] = Math.max(dest[0], rangeX[1]);
+
+          rangeY[0] = Math.min(dest[1], rangeY[0]);
+          rangeY[1] = Math.max(dest[1], rangeY[1]);
+
+          rangeZ[0] = Math.min(dest[2], rangeZ[0]);
+          rangeZ[1] = Math.max(dest[2], rangeZ[1]);
+        }
+      }
+      atmosphereMaterial.uniforms.minX.value = rangeX[0];
+      atmosphereMaterial.uniforms.maxX.value = rangeX[1];
+      atmosphereMaterial.uniforms.minY.value = rangeY[0];
+      atmosphereMaterial.uniforms.maxY.value = rangeY[1];
+      atmosphereMaterial.uniforms.minZ.value = rangeZ[0];
+      atmosphereMaterial.uniforms.maxZ.value = rangeZ[1];
       renderer.render(scene, camera);
       // composer.render();
     }
@@ -394,10 +372,11 @@ function App() {
     };
     window.addEventListener('resize', () => {
       const aspect = window.innerWidth / window.innerHeight;
-      // camera.aspect = aspect;
-      camera.left = -aspect;
-      camera.right = aspect;
+      camera.aspect = aspect;
+      // camera.left = -aspect;
+      // camera.right = aspect;
       camera.updateProjectionMatrix();
+      atmosphereMaterial.uniforms.aspect.value = aspect;
       renderer.setSize(window.innerWidth, window.innerHeight);
       render();
     }, false);
