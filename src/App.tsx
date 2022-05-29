@@ -102,6 +102,8 @@ function App() {
       // metalness: 0,
       // shininess: 0.1,
       map: new THREE.TextureLoader().load('texture/world.topo.bathy.200404.3x5400x2700.jpg'),
+      // map: new THREE.TextureLoader().load('texture/earth360.png'),
+
       specularMap: new THREE.TextureLoader().load('texture/2k_earth_specular_map.png'),
       specular: new THREE.Color('black'),
       // bumpMap: new THREE.TextureLoader().load('texture/8081_earthbump2k.jpg'),
@@ -111,7 +113,7 @@ function App() {
     new THREE.TextureLoader()
     const earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
 
-    scene.add(earthMesh);
+    // scene.add(earthMesh);
 
     const cloudGeometry = new THREE.SphereGeometry(0.601, 64, 64);
     const cloudMaterial = new THREE.MeshPhongMaterial({
@@ -124,7 +126,7 @@ function App() {
       map: new THREE.TextureLoader().load("texture/2k_earth_clouds.jpeg"),
     });
     const cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial);
-    scene.add(cloudMesh);
+    // scene.add(cloudMesh);
 
 
     earthMesh.rotateX(-0.4);
@@ -140,7 +142,7 @@ function App() {
     });
     const galaxyMesh = new THREE.Mesh(galaxyGeometry, galaxyMaterial);
     galaxyMesh.position.set(0, 0, -100);
-    galaxyMesh.scale.set(aspect * 2,  aspect * 2, aspect * 2);
+    galaxyMesh.scale.set(aspect * 2, aspect * 2, aspect * 2);
     scene.add(galaxyMesh);
 
 
@@ -190,7 +192,7 @@ function App() {
       atmosphereMaterial,
     );
 
-    scene.add(atmosphereMesh);
+    // scene.add(atmosphereMesh);
     const haloGeometry = new THREE.SphereGeometry(0.5, 64, 64);
     const haloMaterial = new THREE.ShaderMaterial({
       vertexShader,
@@ -210,7 +212,7 @@ function App() {
     haloMesh.position.set(0, -0.43, -0.1);
     haloMesh.scale.set(1.5, 1, 1);
 
-    scene.add(haloMesh);
+    // scene.add(haloMesh);
 
     const sunriseGeometry = new THREE.BoxGeometry(2.5, 0.01, 0.01, 10, 10);
     const sunriseMaterial = new THREE.ShaderMaterial({
@@ -229,12 +231,12 @@ function App() {
       sunriseMaterial,
     );
     sunriseMesh.position.set(0, -0.242, 0);
-    scene.add(sunriseMesh);
+    // scene.add(sunriseMesh);
 
     // ambient light
     const ambientlight = new THREE.AmbientLight(lightColor, 0.5);
     ambientlight.position.set(0, -0.5, -0.5);
-    scene.add(ambientlight);
+    // scene.add(ambientlight);
 
     // const ambientlightProbe = new THREE.AmbientLightProbe(0xffffff, 0.5);
     // scene.add(ambientlightProbe);
@@ -260,7 +262,7 @@ function App() {
 
     const earthItem = new SceneItem({
       0: { t: 0 },
-      8.5: { deg: -170, atmosphereScale: 0.9, haloScale: 0,  },
+      8.5: { deg: -170, atmosphereScale: 0.9, haloScale: 0, },
       9.1: { sunriseScale: 0, sunrisePosition: -0.01 },
       9.7: { atmosphereScale: 1.07, deg: -260, sunriseScale: 1, sunrisePosition: 0, haloScale: 1 },
       10: { t: 320 },
@@ -286,14 +288,14 @@ function App() {
         // (1 - (from[1] - c) / (to[1] - c)) * b = to[0] - (from[1] - c) / (to[1] - c) * from[0];
 
         const b = (to[0] - (from[1] - c) / (to[1] - c) * from[0]) / (1 - (from[1] - c) / (to[1] - c));
-        const a = (from[1] - c)  * (from[0] - b);
-        
+        const a = (from[1] - c) * (from[0] - b);
+
         return a / (point - b) + c;
       };
 
       // y = Math.log10(endPoint + 1 - z) * 3 - 2.65;
-      const y = reverse([-30, 0], [endPoint, -2.65], 0.05, z);
-      const globeScale = reverse([-30, 0.1], [endPoint, 4], -0.1, z); // linear([-30, 0.01], [endPoint, 4], z)
+      const y = reverse([-30, 0], [endPoint, -2.65], 0.02, z);
+      const globeScale = reverse([-30, 0.01], [endPoint, 4], -0.1, z); // linear([-30, 0.01], [endPoint, 4], z)
 
       cloudMesh.position.set(0, y, z);
       earthMesh.position.set(0, y, z);
@@ -411,6 +413,54 @@ function App() {
     window.addEventListener("resize", onResize);
     animate();
 
+    const sections: HTMLElement[] = [].slice.call(document.querySelectorAll(".other"));
+
+    sections.forEach(section => {
+      section.querySelector(".container")!.addEventListener("transitionend", () => {
+        if (section.classList.contains("fadeOut")) {
+          section.classList.remove("fadeOut");
+        }
+      });
+    });
+    let intersectionRatio = [0, 0, 0, 0];
+    let intersections = [false, false, false, false];
+    let observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const target = entry.target;
+        intersections[sections.indexOf(target as HTMLElement)]
+          = entry.intersectionRatio >= 0.99;
+
+          intersectionRatio[sections.indexOf(target as HTMLElement)]
+          = entry.intersectionRatio;
+
+        if (entry.intersectionRatio < 0.99) {
+          target.classList.remove("fadeIn");
+          target.classList.add("fadeOut");
+        }
+        
+      });
+
+      console.log(intersections, intersectionRatio);
+      const index = intersections.lastIndexOf(true);
+
+      sections.forEach((section, i) => {
+        if (i === index) {
+          section.classList.remove("fadeOut");
+          section.classList.add("fadeIn");          
+        } else {
+          section.classList.remove("fadeIn");
+          section.classList.add("fadeOut");
+        }
+      });
+    }, {
+      root: null,
+      rootMargin: '0px',
+      threshold: [0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.99, 1.0],
+    });
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
 
     return () => {
       window.removeEventListener("scroll", onScroll);
@@ -426,13 +476,66 @@ function App() {
         <div className="hero">
           <canvas className="webgl"></canvas>
           <div className="soon">
-            <h3>Coming Soon</h3>
-            <p className="description">22nd FEConf Frontend Developer Conference</p>
+            {/* <h3>Coming Soon</h3>
+            <p className="description">22nd FEConf Frontend Developer Conference</p> */}
           </div>
         </div>
       </section>
-      <section className="heroSection">
-
+      <section className="other">
+        <div className="container">
+          <h2>WHY0</h2>
+        </div>
+      </section>
+      <section className="other">
+        <div className="container">
+          <h2>WHY1</h2>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p><p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p><p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p><p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p><p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p><p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p><p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+          <p>aasasas</p>
+        </div>
+      </section>
+      <section className="other">
+        <div className="container">
+          <h2>WHY2</h2>
+        </div>
+      </section>
+      <section className="other">
+        <div className="container">
+          <h2>WHY3</h2>
+        </div>
       </section>
     </div>
   );
