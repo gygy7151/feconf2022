@@ -8,7 +8,6 @@ import { Matrix4 } from 'three';
 // import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 // import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
 import './App.css';
-import { makeEarthCloudTexture } from './makeEarthCloudTexture';
 
 const vertexShader = `
 varying vec3 vNormal;
@@ -56,6 +55,7 @@ void main() {
 }
 `;
 function App() {
+
   useEffect(() => {
     // global variables
     let scene: THREE.Scene;
@@ -264,6 +264,7 @@ function App() {
       9.1: { sunriseScale: 0, sunrisePosition: -0.01 },
       9.7: { atmosphereScale: 1.07, deg: -260, sunriseScale: 1, sunrisePosition: 0, haloScale: 1 },
       10: { t: 320 },
+      11: {},
     }, {
       easing: "ease-out",
     }).on("animate", e => {
@@ -355,9 +356,6 @@ function App() {
       earth: earthItem,
       text: textScene,
     });
-    window.addEventListener("wheel", e => {
-      earthScene.setTime(earthScene.getTime() + e.deltaY / 1000);
-    });
 
     earthScene.setTime(earthScene.getDuration());
     const render = () => {
@@ -392,7 +390,15 @@ function App() {
       raqId = requestAnimationFrame(animate);
       render();
     };
-    window.addEventListener('resize', () => {
+    const onScroll = () => {
+      const scrollTop = document.documentElement.scrollTop;
+      const ratio = Math.min(2, scrollTop / window.innerHeight);
+      const duration = earthScene.getDuration();
+      const time = ratio / 2 * duration;
+
+      earthScene.setTime(time);
+    }
+    const onResize = () => {
       const aspect = window.innerWidth / window.innerHeight;
       // camera.aspect = aspect;
       camera.left = -aspect;
@@ -400,14 +406,15 @@ function App() {
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       render();
-    }, false);
-    // rendering
-
-
+    };
+    window.addEventListener("scroll", onScroll);
+    window.addEventListener("resize", onResize);
     animate();
 
 
     return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
       cancelAnimationFrame(raqId);
       scene.clear();
       renderer.clear();
@@ -415,11 +422,18 @@ function App() {
   }, []);
   return (
     <div className="App">
-      <canvas className="webgl"></canvas>
-      <div className="soon">
-        <h3>Coming Soon</h3>
-        <p className="description">22nd FEConf Frontend Developer Conference</p>
-      </div>
+      <section className="heroSection">
+        <div className="hero">
+          <canvas className="webgl"></canvas>
+          <div className="soon">
+            <h3>Coming Soon</h3>
+            <p className="description">22nd FEConf Frontend Developer Conference</p>
+          </div>
+        </div>
+      </section>
+      <section className="heroSection">
+
+      </section>
     </div>
   );
 }
