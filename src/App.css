@@ -4,6 +4,7 @@ html, body, #root, .App {
   margin: 0;
   padding: 0;
   width: 100%;
+  background: #000;
 }
 section {
   display: block;
@@ -12,32 +13,11 @@ section {
 .heroSection {
   position: fixed;
   top: 0;
+  width: 100%;
   height: 100vh;
   z-index: 0;
 }
-.other {
-  position: sticky;
-  z-index: 1;
-  color: #fff;
-  overflow: hidden;
-  margin: 0;
-  top: 0;
-  height: 100vh;
-}
-.other .container {
-  position: relative;
-  width: 100%;
-  text-align: center;
-  transition: all ease 1s;
-  opacity: 0;
-  transform: scale(0.7);
-}
-.hero {
-  position: fixed;
-  top: 0;
-  width: 100%;
-}
-.App canvas {
+canvas {
   position: relative;
   width: 100%;
   height: 100%;
@@ -50,6 +30,7 @@ section {
   transform: translate(-50%, -50%);
   text-align: center;
   color: #fff;
+  line-height: 0;
 }
 .soon h3 {
   font-size: 80px;
@@ -57,6 +38,46 @@ section {
 }
 .soon .description {
   font-size: 20px;
+}
+
+
+.other {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  overflow: hidden;
+  margin: 0;
+  top: 0;
+  height: 100vh;
+}
+
+.other .sticky {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.other .container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  line-height: 100vh;
+  text-align: center;
+  transition: all ease 1s;
+}
+.hero {
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+.fadeZero .sticky, .fadeIn .sticky, .fadeOut .sticky {
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+.fadeZero .container {
+  opacity: 0;
+  transform: scale(0.7);
+  transition: none;
 }
 .fadeIn .container {
   opacity: 1;

@@ -26,7 +26,6 @@ export function makeEarthCloudTexture() {
             imageTrans.src = "/texture/earthcloudmaptrans.jpg";
         }),
     ]).then(([imageMap, imageTrans]) => {
-        console.log(imageMap, imageTrans)
         const canvasMap = document.createElement("canvas");
         canvasMap.width = imageMap.width;
         canvasMap.height = imageMap.height;
