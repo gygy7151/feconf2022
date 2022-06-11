@@ -29,7 +29,7 @@ export const Cloud = React.forwardRef<THREE.Mesh>((_, ref) => {
 });
 
 export const Earth = React.forwardRef<THREE.Mesh, EarthProps>((props, ref) => {
-    const earthTexture = useLoader(THREE.TextureLoader, "texture/world.topo.bathy.200404.3x5400x2700.jpg");
+    const earthTexture = useLoader(THREE.TextureLoader, "texture/earth.jpeg");
     const normalTexture = useLoader(THREE.TextureLoader, "texture/2k_earth_normal_map.png");
     const specularTexture = useLoader(THREE.TextureLoader, "texture/2k_earth_specular_map.png");
 
@@ -40,7 +40,6 @@ export const Earth = React.forwardRef<THREE.Mesh, EarthProps>((props, ref) => {
 
         mesh.rotateX(-0.4);
         mesh.rotateY(2.4);
-        // mesh.rotateOnAxis(new THREE.Vector3(1, 2, -1), 0.0003);
     }, [ref]);
     return <mesh ref={ref}>
         <sphereGeometry args={[0.6, 64, 64]} />
@@ -48,7 +47,7 @@ export const Earth = React.forwardRef<THREE.Mesh, EarthProps>((props, ref) => {
             map={earthTexture}
             // normalMap={normalTexture}
             // specularMap={specularTexture}
-            // normalScale={new THREE.Vector2(-2, -2)}
+            normalScale={new THREE.Vector2(-2, -2)}
         />
     </mesh>;
 });
