@@ -317,6 +317,16 @@ function App() {
     if (fadeIn && isReady) {
       earthScene.setTime(0);
       earthScene.play();
+
+      let rafId = requestAnimationFrame(function move() {
+        earthRef.current!.rotateOnAxis(new THREE.Vector3(1, 2, -1), 0.0003);
+        cloudRef.current!.rotateOnAxis(new THREE.Vector3(1, 2, -1), 0.0003);
+
+        rafId = requestAnimationFrame(move);
+      });
+      return () => {
+        cancelAnimationFrame(rafId);
+      };
     }
   }, [fadeIn, isReady]);
   return (
