@@ -6,6 +6,10 @@ html, body, #root, .App {
   width: 100%;
   background: #000;
 }
+p, h1, h2 {
+  margin: 0;
+  padding: 0;
+}
 section {
   display: block;
   position: sticky;
@@ -44,7 +48,6 @@ canvas {
 .other {
   position: relative;
   z-index: 1;
-  color: #fff;
   overflow: hidden;
   margin: 0;
   top: 0;
@@ -60,7 +63,6 @@ canvas {
   position: relative;
   width: 100%;
   height: 100%;
-  line-height: 100vh;
   text-align: center;
   transition: all ease 1s;
 }
@@ -86,4 +88,69 @@ canvas {
 .fadeOut .container {
   opacity: 0;
   transform: scale(2);
+}
+
+
+.main {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #D7DCE5;
+  white-space: nowrap;
+}
+.container {
+  font-family: "Pretendard", sans-serif;
+  /* letter-spacing: -1px; */
+}
+.main .subTitle {
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 26.4px;
+  margin-bottom: 24px;
+}
+.main h1 {
+  font-weight: 800;
+  font-size: 84px;
+  line-height: 92.4px;
+}
+.main h1, .main h2 {
+  color: #fff;
+}
+
+#introduction .main {
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 38.4px;
+}
+h2 {
+  font-weight: 700;
+  font-size: 60px;
+  line-height: 75px;
+  margin-bottom: 24px;
+}
+.description {
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 38.4px;
+  margin-bottom: 48px;
+  color: #b7bcc8;
+}
+.main button {
+  height: 64px;
+  border-radius: 32px;
+  padding: 0px 32px 0px 32px;
+  color: #fff;
+  appearance: none;
+  background: none;
+  border: 1px solid #fff;
+  font-size: 16px;
+  font-weight: 600;
+}
+#soon {
+  z-index: 0;
+}
+#soon h1 {
+  margin-bottom: 32px;
 }

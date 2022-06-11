@@ -10,11 +10,14 @@ export const Cloud = React.forwardRef<THREE.Mesh>((_, ref) => {
     const cloudTexture = useLoader(THREE.TextureLoader, "texture/2k_earth_clouds.jpeg");
 
     React.useEffect(() => {
-        (ref! as React.RefObject<THREE.Mesh>).current!.rotateOnAxis(new THREE.Vector3(1, 2, -1), 0.0003);
+        const mesh = (ref! as React.RefObject<THREE.Mesh>).current!;
+
+        mesh.rotateX(-0.4);
+        mesh.rotateY(2.4);
     }, [ref]);
 
     return <mesh ref={ref}>
-        {/* <sphereGeometry args={[0.6, 64, 64]} /> */}
+        <sphereGeometry args={[0.6, 64, 64]} />
         <meshPhongMaterial
             map={cloudTexture}
             side={THREE.DoubleSide}

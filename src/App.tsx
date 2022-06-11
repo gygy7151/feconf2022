@@ -45,10 +45,10 @@ function Box(props: any) {
 
 function App() {
 
-    // earthMesh.rotateX(-0.4);
-    // cloudMesh.rotateX(-0.4);
-    // earthMesh.rotateY(2.4);
-    // cloudMesh.rotateY(2.4);
+  // earthMesh.rotateX(-0.4);
+  // cloudMesh.rotateX(-0.4);
+  // earthMesh.rotateY(2.4);
+  // cloudMesh.rotateY(2.4);
 
   //   // galaxy geometry
   //   const galaxyGeometry = new THREE.BoxGeometry(2, 1, 1);
@@ -213,13 +213,13 @@ function App() {
               target.classList.remove("fadeOut", "fadeZero");
               target.classList.add("fadeIn");
 
-              if (sections[3] === target) {
+              if (sections[4] === target) {
                 setFadeIn(true);
               }
             });
           });
         } else if (ratio <= 0.4) {
-          if (sections[3] === target) {
+          if (sections[4] === target) {
             setFadeIn(false);
           }
           if (target.classList.contains("fadeIn")) {
@@ -269,7 +269,7 @@ function App() {
       const sunriseMesh = sunriseRef.current!;
       const effectLight = effectLightRef.current!;
       const whiteLight = whiteLightRef.current!;
-      
+
       if (!earthMesh) {
         return;
       }
@@ -304,39 +304,16 @@ function App() {
       haloMesh.scale.set(haloScale * 1.5, haloScale, haloScale);
     });
 
-    const soonText = "Coming Soon";
-    const descriptionText = "22nd FEConf Frontend Developer Conference";
-    function typing(item: SceneItem, text: string, startTime: number, endTime: number) {
-
-      const length = text.length;
-
-      for (let i = 0; i <= length; ++i) {
-        item.set(startTime + (endTime - startTime) * i / length, "html", text.substring(0, i));
-      }
-      return item;
-    }
-
-    const textScene = new Scene({
-    }, {
-      easing: "ease-out",
-      selector: true,
-    });
-    typing(textScene.newItem(".soon h3") as SceneItem, soonText, 2, 3);
-    typing(textScene.newItem(".soon .description") as SceneItem, descriptionText, 2.4, 4.2);
-
     const earthScene = new Scene({
       earth: earthItem,
-      text: textScene,
     });
 
     return earthScene;
   });
   useEffect(() => {
     earthScene.setSelector();
-    (earthScene.getItem("text") as Scene).setSelector();
   }, []);
   useEffect(() => {
-    console.log(fadeIn, isReady);
     if (fadeIn && isReady) {
       earthScene.setTime(0);
       earthScene.play();
@@ -354,25 +331,49 @@ function App() {
       <section className="other">
         <div className="sticky">
           <div className="container">
-            <h2>WHY0</h2>
+            <div className="main">
+              <p className="subTitle">Explore the forefront of FE dev</p>
+              <h1>FECONF. 22</h1>
+            </div>
           </div>
         </div>
       </section>
-      <section className="other">
+      <section className="other" id="introduction">
         <div className="sticky">
           <div className="container">
-            <h2>WHY1</h2>
-          </div>
-        </div>
+            <div className="main">
+              <div className="description">
+                국내 최대 규모 프론트엔드 개발 컨퍼런스 FEConf<br />
+                엔지니어들의 다양한 도전과 경험을 공유합니다.<br />
+                새로운 기술을 익히고 함께 성장해요.
+              </div>
+              </div>
+            </div>
+            </div>
       </section>
-      <section className="other">
+      <section className="other" id="speaker">
         <div className="sticky">
           <div className="container">
-            <h2>WHY2</h2>
+            <div className="main">
+              <h2>FEConf 22를 함께 빛낼<br />스피커를 모집해요!</h2>
+              <p className="description">당신의 멋진 스토리를 공유하고, 함께 빛내요.</p>
+              <button className="apply">스피커 신청하기</button>
+            </div>
           </div>
         </div>
       </section>
-      <section className="other">
+      <section className="other" id="sponser">
+        <div className="sticky">
+          <div className="container">
+            <div className="main">
+              <h2>컨퍼런스를 함께 만들어갈<br />후원사를 모집해요.</h2>
+              <p className="description">후원을 통해 함께 프론트엔드 개발 문화를 만들고,<br />기업 홍보 및 채용 활동을 계획해보세요!</p>
+              <button className="ask">후원 모집하기</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="other" id="soon">
         <div className="sticky">
           <div className="container">
             <Suspense >
@@ -390,9 +391,9 @@ function App() {
                 <pointLight ref={whiteLightRef} color={0xffffff} intensity={3} distance={5} />
               </Canvas>
             </Suspense>
-            <div className="soon">
-              <h3></h3>
-              <p className="description"></p>
+            <div className="main">
+              <h1>10월에 찾아옵니다.</h1>
+              <p className="description">2022 FEConf -&gt; Frontend Developer Conference</p>
             </div>
           </div>
         </div>
