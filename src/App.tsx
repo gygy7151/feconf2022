@@ -255,11 +255,11 @@ function App() {
   const [earthScene] = useState(() => {
     const earthItem = new SceneItem({
       0: { t: 0 },
-      0.7: { atmosphereScale: 0.9 },
-      1: { t: 100, deg: -170, haloScale: 0, },
-      1.6: { sunriseScale: 0 },
+      0.7: { },
+      1: { deg: -170, atmosphereScale: 0.5, haloScale: 0, },
+      1.6: { t: 100,sunriseScale: 0 },
       1.8: { atmosphereScale: 1.07, },
-      2.2: { deg: -240, sunriseScale: 1, haloScale: 1 },
+      2.2: { deg: -255, sunriseScale: 1, haloScale: 1 },
     }, {
       easing: "ease-out",
     }).on("animate", e => {
@@ -276,9 +276,9 @@ function App() {
       }
       const tick = e.frame.get("t");
       const rad = e.frame.get("deg") * Math.PI / 180;
-      const y = -3.7 + tick * 0.01; // -2.7
+      const y = -4.7 + tick * 0.02; // -2.7
       const z = 2;
-      const globeScale = 4;
+      const globeScale = 6 - 2 * tick / 100;
 
       // (earthMesh.material as any).opacity = 1;
       // (cloudMesh.material as any).opacity = 1;
@@ -296,8 +296,8 @@ function App() {
 
 
       // light
-      const lightZ = 5 * Math.cos(rad);
-      const lightY = 5 * Math.sin(rad);
+      const lightZ = 3 * Math.cos(rad);
+      const lightY = 3 * Math.sin(rad);
 
       lightHelperRef.current!.light = whiteLight;
       lightHelperRef.current!.matrix = whiteLight.matrixWorld;
@@ -415,7 +415,7 @@ function App() {
           <div className="container">
             <Suspense >
               <Canvas orthographic={true}>
-                <ambientLight color={EFFECT_COLOR} intensity={0.5} />
+                <ambientLight color={EFFECT_COLOR} intensity={0.4} />
                 <Default />
                 <Earth ref={earthRef} onReady={() => {
                   setReady(true);
@@ -425,8 +425,8 @@ function App() {
                 <Halo ref={haloRef} />
                 <Atmosphere ref={atmosphereRef} />
                 <pointLightHelper ref={lightHelperRef} args={[testLight]} />
-                <pointLight ref={effectLightRef} color={EFFECT_COLOR} intensity={5} distance={4} />
-                <pointLight ref={whiteLightRef} color={0xffffff} intensity={5} distance={4} />
+                <pointLight ref={effectLightRef} color={EFFECT_COLOR} intensity={3} distance={5} />
+                <pointLight ref={whiteLightRef} color={0xffffff} intensity={3} distance={5} />
               </Canvas>
             </Suspense>
             <div className="main">

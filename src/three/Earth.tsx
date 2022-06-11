@@ -74,7 +74,7 @@ export const Earth = React.forwardRef<THREE.Mesh, EarthProps>((props, ref) => {
         <sphereGeometry args={[0.6, 64, 64]} />
         <meshPhongMaterial
             map={earthTexture}
-            normalMap={normalTexture}
+            // normalMap={normalTexture}
             specularMap={specularTexture}
             normalScale={new THREE.Vector2(-2, -2)}
 
