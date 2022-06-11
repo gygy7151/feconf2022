@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 import Scene, { SceneItem } from 'scenejs';
 import * as THREE from 'three';
-import { Matrix4 } from 'three';
+import { Matrix4, PointLightHelper } from 'three';
 
 // import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 // import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -213,13 +213,13 @@ function App() {
               target.classList.remove("fadeOut", "fadeZero");
               target.classList.add("fadeIn");
 
-              if (sections[4] === target) {
+              if (sections[5] === target) {
                 setFadeIn(true);
               }
             });
           });
         } else if (ratio <= 0.4) {
-          if (sections[4] === target) {
+          if (sections[5] === target) {
             setFadeIn(false);
           }
           if (target.classList.contains("fadeIn")) {
@@ -247,6 +247,7 @@ function App() {
   const sunriseRef = useRef<THREE.Mesh>(null);
   const earthRef = useRef<THREE.Mesh>(null);
   const cloudRef = useRef<THREE.Mesh>(null);
+  const lightHelperRef = useRef<THREE.PointLightHelper>(null);
   const effectLightRef = useRef<THREE.PointLight>(null);
   const whiteLightRef = useRef<THREE.PointLight>(null);
 
@@ -258,7 +259,7 @@ function App() {
       1: { t: 100, deg: -170, haloScale: 0, },
       1.6: { sunriseScale: 0 },
       1.8: { atmosphereScale: 1.07, },
-      2.2: { deg: -260, sunriseScale: 1, haloScale: 1 },
+      2.2: { deg: -240, sunriseScale: 1, haloScale: 1 },
     }, {
       easing: "ease-out",
     }).on("animate", e => {
@@ -279,6 +280,10 @@ function App() {
       const z = 2;
       const globeScale = 4;
 
+      // (earthMesh.material as any).opacity = 1;
+      // (cloudMesh.material as any).opacity = 1;
+      // (atmosphereMesh.material as any).opacity = 1;
+
       cloudMesh.position.set(0, y, z);
       earthMesh.position.set(0, y, z);
       atmosphereMesh.position.set(0, y, z - 0.1);
@@ -291,11 +296,14 @@ function App() {
 
 
       // light
-      const lightZ = 3 * Math.cos(rad);
-      const lightY = 3 * Math.sin(rad);
+      const lightZ = 5 * Math.cos(rad);
+      const lightY = 5 * Math.sin(rad);
 
-      effectLight.position.set(0, y + lightY, z + lightZ);
-      whiteLight.position.set(0, y + lightY, z + lightZ);
+      lightHelperRef.current!.light = whiteLight;
+      lightHelperRef.current!.matrix = whiteLight.matrixWorld;
+
+      effectLight?.position.set(0, y + lightY, z + lightZ);
+      whiteLight?.position.set(0, y + lightY, z + lightZ);
 
       const sunriseScale = e.frame.get("sunriseScale");
       const haloScale = e.frame.get("haloScale");
@@ -329,6 +337,7 @@ function App() {
       };
     }
   }, [fadeIn, isReady]);
+  const [testLight] = useState(() => new THREE.PointLight());
   return (
     <div className="App">
       <section className="heroSection">
@@ -391,6 +400,16 @@ function App() {
           </div>
         </div>
       </section>
+      <section className="other">
+        <div className="sticky">
+          <div className="container">
+            <div className="main">
+              Earth: <input type="file" id="earthFile"></input><br/>
+              Cloud: <input type="file" id="cloudFile"></input><br/>
+            </div>
+          </div>
+        </div>
+      </section>
       <section className="other" id="soon">
         <div className="sticky">
           <div className="container">
@@ -405,8 +424,9 @@ function App() {
                 <Sunrise ref={sunriseRef} />
                 <Halo ref={haloRef} />
                 <Atmosphere ref={atmosphereRef} />
-                <pointLight ref={effectLightRef} color={EFFECT_COLOR} intensity={3} distance={5} />
-                <pointLight ref={whiteLightRef} color={0xffffff} intensity={3} distance={5} />
+                <pointLightHelper ref={lightHelperRef} args={[testLight]} />
+                <pointLight ref={effectLightRef} color={EFFECT_COLOR} intensity={5} distance={4} />
+                <pointLight ref={whiteLightRef} color={0xffffff} intensity={5} distance={4} />
               </Canvas>
             </Suspense>
             <div className="main">

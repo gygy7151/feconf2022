@@ -18,6 +18,18 @@ export const Cloud = React.forwardRef<THREE.Mesh>((_, ref) => {
 
         mesh.rotateX(-0.4);
         mesh.rotateY(2.4);
+
+
+        const cloudFile = document.querySelector<HTMLInputElement>("#cloudFile")!;
+
+        cloudFile.addEventListener("change", () => {
+            const file = cloudFile.files![0];
+            const reader = new FileReader();
+            reader.addEventListener("load", e => {
+                setCloudTexture(new TextureLoader().load(e.target!.result as any));
+            });
+            reader.readAsDataURL(file);
+        });
     }, [ref]);
 
     return <mesh ref={ref}>
@@ -40,24 +52,34 @@ export const Earth = React.forwardRef<THREE.Mesh, EarthProps>((props, ref) => {
 
 
 
-    (window as any).setEarthTexture = React.useCallback((src: any) => {
-        setEarthTexture(new TextureLoader().load(src));
-    }, []);
-
     React.useEffect(() => {
         props.onReady();
         const mesh = (ref! as React.RefObject<THREE.Mesh>).current!;
 
         mesh.rotateX(-0.4);
         mesh.rotateY(2.4);
-    }, [ref]);
+
+        const earthFile = document.querySelector<HTMLInputElement>("#earthFile")!;
+
+        earthFile.addEventListener("change", () => {
+            const file = earthFile.files![0];
+            const reader = new FileReader();
+            reader.addEventListener("load", e => {
+                setEarthTexture(new TextureLoader().load(e.target!.result as any));
+            });
+            reader.readAsDataURL(file);
+        });
+    }, []);
     return <mesh ref={ref}>
         <sphereGeometry args={[0.6, 64, 64]} />
         <meshPhongMaterial
             map={earthTexture}
-            // normalMap={normalTexture}
-            // specularMap={specularTexture}
+            normalMap={normalTexture}
+            specularMap={specularTexture}
             normalScale={new THREE.Vector2(-2, -2)}
+
+            transparent={true}
+            depthWrite={true}
         />
     </mesh>;
 });
