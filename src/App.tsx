@@ -337,6 +337,14 @@ function App() {
           <Galaxy />
           <WarpLine />
         </Canvas>
+        <div style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          top: "0px",
+          left: "0px",
+          background: "radial-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0))",
+        }}></div>
       </section>
       <section className="other">
         <div className="sticky">

@@ -1,10 +1,11 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { LineSegments } from "three";
 
+const DEFAULT_VELOCITY = 0.007;
 
-export function WarpLine() {
+export const WarpLine = () => {
+    const velocityRef = useRef(DEFAULT_VELOCITY);
     const lineCount = 3000;
     const lineRef = useRef<THREE.LineSegments>(null);
     const [attributes] = useState(() => {
@@ -33,8 +34,27 @@ export function WarpLine() {
     useEffect(() => {
         lineRef.current!.matrixAutoUpdate = false;
         lineRef.current!.matrix.makePerspective(-1, 1, 1, -1, 0.5, -100);
+
+        let scrollTop = 0;
+        function onScroll() {
+            const prevScrollTop = scrollTop;
+            
+            scrollTop = document.documentElement.scrollTop;
+
+            const sign = scrollTop - prevScrollTop > 0;
+
+            velocityRef.current += sign ? 0.001 : -0.002;
+        }
+        onScroll();
+        window.addEventListener("scroll", onScroll);
+        return () => {
+            window.removeEventListener("scroll", onScroll);
+        }
     }, []);
     useFrame(() => {
+        const velocity = velocityRef.current;
+
+        velocityRef.current = velocity - (velocity - DEFAULT_VELOCITY) * 0.05;
         const {
             velocities,
             position,
@@ -42,14 +62,24 @@ export function WarpLine() {
         const positionArray = position.array as number[];
         const velocitiesArray = velocities.array as number[];
         for (let lineIndex = 0; lineIndex < lineCount; ++lineIndex) {
-            velocitiesArray[2 * lineIndex] += 0.007;
-            velocitiesArray[2 * lineIndex + 1] += 0.0071;
+            velocitiesArray[2 * lineIndex] = 100 * velocity;
+            velocitiesArray[2 * lineIndex + 1] = 100 * (velocity + velocity * 0.014);
 
             // z
             positionArray[6 * lineIndex + 2] += velocitiesArray[2 * lineIndex];
             positionArray[6 * lineIndex + 5] += velocitiesArray[2 * lineIndex + 1];
 
-            if (positionArray[6 * lineIndex + 5] > 200) {
+            // (-100 ~ 100) to 200
+            if (positionArray[6 * lineIndex + 5] > 100) {
+                const z = Math.random() * 200 - 100;
+
+                positionArray[6 * lineIndex + 2] = z;
+                positionArray[6 * lineIndex + 5] = z;
+                velocitiesArray[2 * lineIndex] = 0;
+                velocitiesArray[2 * lineIndex + 1] = 0;
+            }
+            // (-200
+            if (positionArray[6 * lineIndex + 5] < -100) {
                 const z = Math.random() * 200 - 100;
 
                 positionArray[6 * lineIndex + 2] = z;
@@ -65,4 +95,4 @@ export function WarpLine() {
         <bufferGeometry attributes={attributes} />
         <lineBasicMaterial color={0xffffff} />
     </lineSegments>;
-}
+};
