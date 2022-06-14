@@ -1,8 +1,5 @@
-import * as React from "react";
-import { useLoader } from "@react-three/fiber";
 import * as THREE from "three";
-import { EFFECT_COLOR, SEGMENTS } from "../consts";
-import { Vector3 } from "three";
+import { EFFECT_COLOR } from "../consts";
 
 const vertexShader = `
 varying vec3 vNormal;
@@ -48,64 +45,59 @@ void main() {
 }
 `;
 
-//   // scene.add(atmosphereMesh);
-//   const haloGeometry = new THREE.SphereGeometry(0.5, 64, 64);
-//   const haloMaterial = new THREE.ShaderMaterial({
-//     vertexShader,
-//     fragmentShader: haloFragmentShader,
-//     blending: THREE.AdditiveBlending,
-//     side: THREE.BackSide,
-//     transparent: true,
-//     depthWrite: true,
-//     uniforms: {
-//       uColor: { value: lightColor },
-//     }
-//   });
-//   const haloMesh = new THREE.Mesh(
-//     haloGeometry,
-//     haloMaterial,
-//   );
-//   haloMesh.position.set(0, -0.43, -0.1);
-//   haloMesh.scale.set(1.5, 1, 1);
+export function getHaloMesh() {
+  const haloGeometry = new THREE.SphereGeometry(0.5, 64, 64);
+  const haloMaterial = new THREE.ShaderMaterial({
+    vertexShader,
+    fragmentShader: haloFragmentShader,
+    blending: THREE.AdditiveBlending,
+    side: THREE.BackSide,
+    transparent: true,
+    depthWrite: true,
+  });
+  const haloMesh = new THREE.Mesh(
+    haloGeometry,
+    haloMaterial,
+  );
+  haloMesh.position.set(0, -0.44, -0.1);
+  haloMesh.scale.set(1.5, 1, 1);
 
-export const Atmosphere = React.forwardRef<THREE.Mesh>((_, ref) => {
-  return <mesh ref={ref}>
-    <sphereGeometry args={[0.6, 64, 64]} />
-    <shaderMaterial
-      vertexShader={vertexShader}
-      fragmentShader={fragmentShader}
-      blending={THREE.AdditiveBlending}
-      side={THREE.BackSide}
-      transparent={true}
-      depthWrite={true}
-    />
-  </mesh>;
-});
+  return haloMesh;
+}
+export function getAtmosphereMesh() {
+  const atmosphereGeometry = new THREE.SphereGeometry(0.602, 64, 64);
+  const atmosphereMaterial = new THREE.ShaderMaterial({
+    vertexShader,
+    fragmentShader,
+    blending: THREE.AdditiveBlending,
+    side: THREE.BackSide,
+    transparent: true,
+    depthWrite: true,
+  });
+  const atmosphereMesh = new THREE.Mesh(
+    atmosphereGeometry,
+    atmosphereMaterial,
+  );
+  atmosphereMesh.position.set(0, 0, 0);
+  atmosphereMesh.scale.set(0, 0, 0);
 
-export const Halo = React.forwardRef<THREE.Mesh>((_, ref) => {
-  return <mesh ref={ref} position={new Vector3(0, -0.44, -0.1)}>
-    <sphereGeometry args={[0.5, 64, 64]} />
-    <shaderMaterial
-      vertexShader={vertexShader}
-      fragmentShader={haloFragmentShader}
-      blending={THREE.AdditiveBlending}
-      side={THREE.BackSide}
-      transparent={true}
-      depthWrite={true}
-    />
-  </mesh>;
-});
+  return atmosphereMesh;
+}
 
-export const Sunrise = React.forwardRef<THREE.Mesh>((_, ref) => {
-  return <mesh ref={ref} position={new Vector3(0, -0.28, 0)}>
-    <boxGeometry args={[2.5, 0.01, 0.01, 10, 10]} />
-    <shaderMaterial
-      vertexShader={sunriseVertexShader}
-      fragmentShader={sunriseFragmentShader}
-      blending={THREE.AdditiveBlending}
-      side={THREE.BackSide}
-      transparent={true}
-      depthWrite={true}
-    />
-  </mesh>;
-});
+export function getSunriseMesh() {
+  const sunriseGeometry = new THREE.BoxGeometry(2.5, 0.01, 0.01, 10, 10);
+  const sunriseMaterial = new THREE.ShaderMaterial({
+    vertexShader: sunriseVertexShader,
+    fragmentShader: sunriseFragmentShader,
+    blending: THREE.AdditiveBlending,
+    side: THREE.BackSide,
+    transparent: true,
+    depthWrite: true,
+  });
+  const sunriseMesh = new THREE.Mesh(
+    sunriseGeometry,
+    sunriseMaterial,
+  );
+  sunriseMesh.position.set(0, -0.295, 0);
+  return sunriseMesh;
+}

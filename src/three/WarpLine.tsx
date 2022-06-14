@@ -1,20 +1,22 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { ThreeCanvas, ThreeCanvasObject } from "./ThreeCanvas";
 
 const DEFAULT_VELOCITY = 0.007;
+const LINE_COUNT = 3000;
 
 export const WarpLine = () => {
+    const threeCanvasRef = useRef<ThreeCanvasObject>(null);
     const velocityRef = useRef(DEFAULT_VELOCITY);
-    const lineCount = 3000;
-    const lineRef = useRef<THREE.LineSegments>(null);
+
     const [attributes] = useState(() => {
-        const position = new THREE.BufferAttribute(new Float32Array(6 * lineCount), 3);
-        const velocities = new THREE.BufferAttribute(new Float32Array(2 * lineCount), 1);
+        const position = new THREE.BufferAttribute(new Float32Array(6 * LINE_COUNT), 3);
+        const velocities = new THREE.BufferAttribute(new Float32Array(2 * LINE_COUNT), 1);
         const positionArray = position.array as number[];
         const velocitiesArray = velocities.array as number[];
 
-        for (let lineIndex = 0; lineIndex < lineCount; ++lineIndex) {
+        for (let lineIndex = 0; lineIndex < LINE_COUNT; ++lineIndex) {
             const rad = Math.random() * Math.PI * 2;
             const lineRadius = 20 + (Math.random() * 20);
             const lineX = lineRadius * Math.cos(rad);
@@ -32,13 +34,35 @@ export const WarpLine = () => {
         };
     });
     useEffect(() => {
-        lineRef.current!.matrixAutoUpdate = false;
-        lineRef.current!.matrix.makePerspective(-1, 1, 1, -1, 0.5, -100);
+        const scene = threeCanvasRef.current!.sceneRef.current!;
+        
+        const galaxyGeometry = new THREE.BoxGeometry(2, 1, 1);
+        const galaxyMaterial = new THREE.MeshBasicMaterial({
+            // map: new THREE.TextureLoader().load('texture/2k_stars_milky_way.jpeg'),
+            map: new THREE.TextureLoader().load('texture/2k_stars.jpeg'),
+            side: THREE.BackSide
+        });
+        const galaxyMesh = new THREE.Mesh(galaxyGeometry, galaxyMaterial);
+        galaxyMesh.position.set(0, 0, -10);
+        galaxyMesh.scale.set(2, 2, 2);
+        scene.add(galaxyMesh);
+
+        const lineGeometry = new THREE.BufferGeometry();
+        lineGeometry.setAttribute("position", attributes.position);
+        lineGeometry.setAttribute("velocity", attributes.velocities);
+
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+        const lineObject = new THREE.LineSegments(lineGeometry, lineMaterial);
+
+        scene.add(lineObject);
+
+        lineObject.matrixAutoUpdate = false;
+        lineObject.matrix.makePerspective(-1, 1, 1, -1, 0.5, -100);
 
         let scrollTop = 0;
         function onScroll() {
             const prevScrollTop = scrollTop;
-            
+
             scrollTop = document.documentElement.scrollTop;
 
             const sign = scrollTop - prevScrollTop > 0;
@@ -51,7 +75,8 @@ export const WarpLine = () => {
             window.removeEventListener("scroll", onScroll);
         }
     }, []);
-    useFrame(() => {
+
+    return <ThreeCanvas ref={threeCanvasRef} render={true} onRender={() => {
         const velocity = velocityRef.current;
 
         velocityRef.current = velocity - (velocity - DEFAULT_VELOCITY) * 0.05;
@@ -61,7 +86,7 @@ export const WarpLine = () => {
         } = attributes;
         const positionArray = position.array as number[];
         const velocitiesArray = velocities.array as number[];
-        for (let lineIndex = 0; lineIndex < lineCount; ++lineIndex) {
+        for (let lineIndex = 0; lineIndex < LINE_COUNT; ++lineIndex) {
             velocitiesArray[2 * lineIndex] = 100 * velocity;
             velocitiesArray[2 * lineIndex + 1] = 100 * (velocity + velocity * 0.014);
 
@@ -89,10 +114,5 @@ export const WarpLine = () => {
             }
         }
         position.needsUpdate = true;
-    });
-
-    return <lineSegments ref={lineRef}>
-        <bufferGeometry attributes={attributes} />
-        <lineBasicMaterial color={0xffffff} />
-    </lineSegments>;
+    }}></ThreeCanvas>;
 };
