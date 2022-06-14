@@ -60,6 +60,7 @@ export const Earth = (props: EarthProps) => {
     const threeCanvasRef = useRef<ThreeCanvasObject>(null);
 
     useEffect(() => {
+
         const scene = threeCanvasRef.current!.sceneRef.current!;
         const haloMesh = getHaloMesh();
         const sunriseMesh = getSunriseMesh();
@@ -91,6 +92,7 @@ export const Earth = (props: EarthProps) => {
         scene.add(atmosphereMesh);
         scene.add(effectLight);
         scene.add(whiteLight);
+
         // scene.add(helper);
     }, []);
     const [earthScene] = useState(() => {

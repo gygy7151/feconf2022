@@ -3,6 +3,7 @@ import { forwardRef, MutableRefObject, RefObject, useEffect, useImperativeHandle
 import * as THREE from "three";
 
 export interface ThreeCanvasProps {
+    perspective?: boolean;
     render: boolean;
     onRender: () => void;
 }
@@ -10,13 +11,13 @@ export interface ThreeCanvasObject {
     canvasRef: RefObject<HTMLCanvasElement>;
     rendererRef: MutableRefObject<THREE.WebGLRenderer | undefined>;
     sceneRef: MutableRefObject<THREE.Scene | undefined>;
-    cameraRef: MutableRefObject<THREE.OrthographicCamera | undefined>;
+    cameraRef: MutableRefObject<THREE.OrthographicCamera | THREE.PerspectiveCamera | undefined>;
 }
 export const ThreeCanvas = forwardRef<ThreeCanvasObject, ThreeCanvasProps>((props, ref) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const rendererRef = useRef<THREE.WebGLRenderer>();
     const sceneRef = useRef<THREE.Scene>();
-    const cameraRef = useRef<THREE.OrthographicCamera>();
+    const cameraRef = useRef<THREE.OrthographicCamera | THREE.PerspectiveCamera>();
 
     useImperativeHandle(ref, () => {
         return {
@@ -34,21 +35,34 @@ export const ThreeCanvas = forwardRef<ThreeCanvasObject, ThreeCanvasProps>((prop
         let aspect = width / height;
 
         const scene = new THREE.Scene();
-        const camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0.1, 10000);
+        let camera: THREE.OrthographicCamera | THREE.PerspectiveCamera;
+        
+        
+        if (props.perspective) {
+            const fov = 60;
+            const aspect = width / height;
+            const near = 0.1;
+            const far = 1000;
+        
+            camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+        } else {
+            camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0.1, 10000);
+        }
 
         camera.position.z = 10;
         scene.add(camera);
 
         // renderer setup
+        const canvas = canvasRef.current!;
         const renderer = new THREE.WebGLRenderer({
-            canvas: canvasRef.current!,
+            canvas,
             antialias: true,
         });
 
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio || 1);
         renderer.autoClear = true;
-        renderer.setClearColor(0x000000, 1.0);
+        renderer.setClearColor(0x000000, 0);
 
 
         rendererRef.current = renderer;
@@ -62,10 +76,11 @@ export const ThreeCanvas = forwardRef<ThreeCanvasObject, ThreeCanvasProps>((prop
 
             renderer.setSize(width, height);
 
-            camera.left = -aspect;
-            camera.right = aspect;
-            camera.top = 1;
-            camera.bottom = -1;
+            (camera as any).left = -aspect;
+            (camera as any).right = aspect;
+            (camera as any).top = 1;
+            (camera as any).bottom = -1;
+            (camera as any).aspect = aspect;
             camera.near = 0.1;
             camera.far = 10000;
             camera.updateProjectionMatrix();
