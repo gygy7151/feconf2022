@@ -7,7 +7,7 @@ import { EFFECT_COLOR } from "../consts";
 import { Mesh } from "three";
 
 const DEFAULT_VELOCITY = 0.007;
-const LINE_COUNT = 1000;
+const LINE_COUNT = 500;
 
 
 const normalVertexShader = `
@@ -21,11 +21,12 @@ void main() {
 `;
 const nebulaFragmentShader = `
 varying vec3 vNormal;
+uniform vec3 uColor;
 
 void main() {
-  float intensity = floor(dot(vNormal, vec3(0.0, 0.0, 1.0)) * 20.0) * 0.05;
-
-	gl_FragColor = vec4(${EFFECT_COLOR.r}, ${EFFECT_COLOR.g}, ${EFFECT_COLOR.b}, 0.3) * intensity;
+  float intensity = pow(dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
+  // floor(* 20.0) * 0.05;
+  gl_FragColor = vec4(uColor, 0.1) * intensity;
 }
 `;
 
@@ -65,21 +66,26 @@ export function getBlurLineMesh() {
     return blurLineMesh;
 }
 
-export function getNebulaMesh() {
-    const geometry = new THREE.SphereGeometry(0.3, 128, 128);
+export function getNebulaMesh(color: number) {
+    const geometry = new THREE.SphereGeometry(1, 64, 64);
     const nebulaMaterial = new THREE.ShaderMaterial({
         vertexShader: normalVertexShader,
         fragmentShader: nebulaFragmentShader,
-        blending: THREE.AdditiveBlending,
-        // side: THREE.BackSide,
+        // blending: THREE.AdditiveBlending,
         transparent: true,
-        depthWrite: true,
+        depthWrite: false,
+        side: THREE.FrontSide,
+        uniforms: {
+            uColor: {
+                value: new THREE.Color(color),
+            },
+        }
     });
     const mesh = new THREE.Mesh(geometry, nebulaMaterial);
     const perlin = new ImprovedNoise();
     const verties = geometry.attributes.position.array as number[];
 
-    const noiseScale = 3 + Math.random() * 3;
+   const noiseScale = 0.5 * Math.random();
     for (let i = 0; i < verties.length / 3; ++i) {
         const x = verties[3 * i];
         const y = verties[3 * i + 1];
@@ -92,7 +98,7 @@ export function getNebulaMesh() {
         verties[3 * i + 2] *= scale;
     }
 
-    mesh.scale.set(3, 3, 3);
+    mesh.scale.set(5, 5, 5);
 
     return mesh;
 }
@@ -102,6 +108,7 @@ export const WarpLine = () => {
     const threeCanvasRef = useRef<ThreeCanvasObject>(null);
     const velocityRef = useRef(DEFAULT_VELOCITY);
     const linesRef = useRef<Mesh[]>([]);
+    const nebularsRef = useRef<Mesh[]>([]);
 
     const [attributes] = useState(() => {
         const position = new THREE.BufferAttribute(new Float32Array(6 * LINE_COUNT), 3);
@@ -125,25 +132,6 @@ export const WarpLine = () => {
     useEffect(() => {
         const scene = threeCanvasRef.current!.sceneRef.current!;
 
-        const galaxyGeometry = new THREE.BoxGeometry(2, 1, 1);
-        const galaxyMaterial = new THREE.MeshBasicMaterial({
-            // map: new THREE.TextureLoader().load('texture/2k_stars_milky_way.jpeg'),
-            map: new THREE.TextureLoader().load('texture/2k_stars.jpeg'),
-            side: THREE.BackSide
-        });
-        const galaxyMesh = new THREE.Mesh(galaxyGeometry, galaxyMaterial);
-        galaxyMesh.position.set(0, 0, -10);
-        galaxyMesh.scale.set(2, 2, 2);
-        // scene.add(galaxyMesh);
-
-        // const lineGeometry = new THREE.BufferGeometry();
-        // lineGeometry.setAttribute("position", attributes.position);
-
-        // const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
-        // const lineObject = new THREE.LineSegments(lineGeometry, lineMaterial);
-
-        // scene.add(lineObject);
-
         for (let i = 0; i < LINE_COUNT; ++i) {
             const line = getBlurLineMesh();
             const lineRad = Math.random() * Math.PI * 2;
@@ -155,11 +143,28 @@ export const WarpLine = () => {
             line.rotateZ(lineRad);
             line.position.set(lineX, lineY, lineZ);
             
-            scene.add(line);        
-
+            scene.add(line);
             linesRef.current.push(line);
         }
 
+        // for (let i = 0; i < 100; ++i) {
+        //     const nebularColors = [
+        //         0x4062DD,
+        //         0x8540DD,
+        //         0x6940DD,
+        //     ]
+        //     const nebula = getNebulaMesh(nebularColors[Math.floor(Math.random() * 3)]);
+        //     const nebularRad = i / 40 * Math.PI * 2;
+        //     const nebularRadius = 5 + (Math.random() * 20);
+        //     const nebularX = nebularRadius * Math.cos(nebularRad);
+        //     const nebularY = nebularRadius * Math.sin(nebularRad);
+        //     const nebularZ = -160 + i * 2;
+
+        //     nebula.position.set(nebularX, nebularY, nebularZ);
+
+        //     nebularsRef.current.push(nebula);
+        //     scene.add(nebula);
+        // }
         // lineObject.matrixAutoUpdate = false;
 
         let scrollTop = 0;
@@ -182,53 +187,37 @@ export const WarpLine = () => {
     return <ThreeCanvas perspective={true} ref={threeCanvasRef} render={true} onRender={() => {
         const velocity = velocityRef.current;
         const lines = linesRef.current;
+        const nebulars = nebularsRef.current;
 
         velocityRef.current = velocity - (velocity - DEFAULT_VELOCITY) * 0.05;
-        const {
-            position,
-        } = attributes;
-        
-        const positionArray = position.array as number[];
 
+        
+        nebulars.forEach(nebular => {
+            const position = nebular.position;
+            let z = nebular.position.z + 20 * velocity;
+            
+            if (z > 20) {
+                z = -80;
+            }
+            if (z < -80) {
+                z = 20;
+            }
+            nebular.position.set(position.x, position.y, z);
+        });
         lines.forEach(line => {
             const position = line.position;
             let z = line.position.z + 100 * velocity;
-
+            let scale = 1;
+            
             if (z > 100) {
                 z = -100;
             }
             if (z < -100) {
                 z = 100;
             }
+            scale = 0.5 + 0.5 * velocity / DEFAULT_VELOCITY;
+            line.scale.set(scale, 1, 1);
             line.position.set(position.x, position.y, z);
         });
-        // for (let lineIndex = 0; lineIndex < LINE_COUNT; ++lineIndex) {
-        //     const head = 100 * (velocity + velocity * 0.014);
-        //     const tail = 100 * velocity;
-
-        //     // z
-        //     positionArray[6 * lineIndex + 2] += tail;
-        //     positionArray[6 * lineIndex + 5] += head;
-        //     // positionArray[6 * lineIndex + 2] = -25;
-        //     // positionArray[6 * lineIndex + 5] = -20;
-
-        //     // console.log(positionArray[6 * lineIndex + 2]);
-
-        //     // (-100 ~ 100) to 200
-        //     if (positionArray[6 * lineIndex + 5] > 100) {
-        //         const z = Math.random() * 200 - 100;
-
-        //         positionArray[6 * lineIndex + 2] = z;
-        //         positionArray[6 * lineIndex + 5] = z;
-        //     }
-        //     // (-200
-        //     if (positionArray[6 * lineIndex + 5] < -100) {
-        //         const z = Math.random() * 200 - 100;
-
-        //         positionArray[6 * lineIndex + 2] = z;
-        //         positionArray[6 * lineIndex + 5] = z;
-        //     }
-        // }
-        // position.needsUpdate = true;
     }}></ThreeCanvas>;
 };
