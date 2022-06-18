@@ -92,17 +92,17 @@ export const Earth = (props: EarthProps) => {
         scene.add(atmosphereMesh);
         scene.add(effectLight);
         scene.add(whiteLight);
-
-        // scene.add(helper);
     }, []);
     const [earthScene] = useState(() => {
         const earthItem = new SceneItem({
             0: { t: 0 },
             0.7: {},
-            1: { deg: -170, atmosphereScale: 0.5, haloScale: 0, },
-            1.6: { t: 100, sunriseScale: 0 },
-            1.8: { atmosphereScale: 1.07, },
-            2.2: { deg: -255, sunriseScale: 1, haloScale: 1 },
+            1: { deg: -170, haloScale: 0, },
+            1.5: { atmosphereScale: 0.5 },
+            1.6: { t: 100, },
+            2: { sunriseScale: 0 },
+            2.5: { atmosphereScale: 1.07 },
+            3: { deg: -255, sunriseScale: 1, haloScale: 1 },
         }, {
             easing: "ease-out",
         }).on("animate", e => {
