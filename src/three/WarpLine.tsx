@@ -50,7 +50,7 @@ void main() {
 `;
 
 export function getBlurLineMesh() {
-    const blurLineGeometry = new THREE.PlaneBufferGeometry(1, 0.05, 10, 10);
+    const blurLineGeometry = new THREE.PlaneBufferGeometry(1, 0.05, 1, 1);
     const blurLineMaterial = new THREE.ShaderMaterial({
         vertexShader: blurVertexShader,
         fragmentShader: blurFragmentShader,
@@ -110,25 +110,25 @@ export const WarpLine = () => {
     const linesRef = useRef<Mesh[]>([]);
     const nebularsRef = useRef<Mesh[]>([]);
 
-    const [attributes] = useState(() => {
-        const position = new THREE.BufferAttribute(new Float32Array(6 * LINE_COUNT), 3);
-        const positionArray = position.array as number[];
+    // const [attributes] = useState(() => {
+    //     const position = new THREE.BufferAttribute(new Float32Array(6 * LINE_COUNT), 3);
+    //     const positionArray = position.array as number[];
 
-        for (let lineIndex = 0; lineIndex < LINE_COUNT; ++lineIndex) {
-            const rad = Math.random() * Math.PI * 2;
-            const lineRadius = 10 + (Math.random() * 20);
-            const lineX = lineRadius * Math.cos(rad);
-            const lineY = lineRadius * Math.sin(rad);
-            const lineZ = Math.random() * 500 - 100;
-            //line start to End
-            positionArray[6 * lineIndex + 3] = positionArray[6 * lineIndex] = lineX;
-            positionArray[6 * lineIndex + 4] = positionArray[6 * lineIndex + 1] = lineY;
-            positionArray[6 * lineIndex + 5] = positionArray[6 * lineIndex + 2] = lineZ;
-        }
-        return {
-            position,
-        };
-    });
+    //     for (let lineIndex = 0; lineIndex < LINE_COUNT; ++lineIndex) {
+    //         const rad = Math.random() * Math.PI * 2;
+    //         const lineRadius = 10 + (Math.random() * 20);
+    //         const lineX = lineRadius * Math.cos(rad);
+    //         const lineY = lineRadius * Math.sin(rad);
+    //         const lineZ = Math.random() * 500 - 100;
+    //         //line start to End
+    //         positionArray[6 * lineIndex + 3] = positionArray[6 * lineIndex] = lineX;
+    //         positionArray[6 * lineIndex + 4] = positionArray[6 * lineIndex + 1] = lineY;
+    //         positionArray[6 * lineIndex + 5] = positionArray[6 * lineIndex + 2] = lineZ;
+    //     }
+    //     return {
+    //         position,
+    //     };
+    // });
     useEffect(() => {
         const scene = threeCanvasRef.current!.sceneRef.current!;
 
@@ -175,7 +175,10 @@ export const WarpLine = () => {
 
             const sign = scrollTop - prevScrollTop > 0;
 
-            velocityRef.current += sign ? 0.001 : -0.002;
+            const size = threeCanvasRef.current!.rendererRef.current!.getSize(new THREE.Vector2());
+
+            const scale = 1 / size.y;
+            velocityRef.current += sign ? scale : -scale * 2;
         }
         onScroll();
         window.addEventListener("scroll", onScroll);
